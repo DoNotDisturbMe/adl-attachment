@@ -1,0 +1,111 @@
+{
+  "definition": {
+    "$schema": "https://schema.management.azure.com/schemas/2016-06-01/workflowdefinition.json#",
+    "actions": {
+      "Get_email": {
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['office365']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/me/messages",
+          "query": {
+            "$filter": "isRead eq false",
+            "$top": 1
+          }
+        },
+        "runAfter": {},
+        "metadata": {
+          "operationMetadataId": "d1e3c2f4-5b8e-4c1b-8c3b-5e5c7c8e3f1f"
+        },
+        "type": "ApiConnection"
+      },
+      "Download_attachment": {
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['office365']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/me/messages/@{triggerBody()?['id']}/attachments",
+          "headers": {
+            "Content-Type": "application/json"
+          }
+        },
+        "runAfter": {
+          "Get_email": [
+            "Succeeded"
+          ]
+        },
+        "metadata": {
+          "operationMetadataId": "f2e3c2f4-5b8e-4c1b-8c3b-5e5c7c8e3f1f"
+        },
+        "type": "ApiConnection"
+      },
+      "Upload_to_ADLS": {
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['azureblob']['connectionId']"
+            }
+          },
+          "method": "put",
+          "path": "/@{triggerBody()?['id']}/@{items('Download_attachment')?['name']}",
+          "headers": {
+            "Content-Type": "application/octet-stream"
+          },
+          "body": "@{items('Download_attachment')?['contentBytes']}"
+        },
+        "runAfter": {
+          "Download_attachment": [
+            "Succeeded"
+          ]
+        },
+        "metadata": {
+          "operationMetadataId": "g3e3c2f4-5b8e-4c1b-8c3b-5e5c7c8e3f1f"
+        },
+        "type": "ApiConnection"
+      }
+    },
+    "triggers": {
+      "When_a_new_email_arrives": {
+        "inputs": {
+          "host": {
+            "connection": {
+              "name": "@parameters('$connections')['office365']['connectionId']"
+            }
+          },
+          "method": "get",
+          "path": "/me/mailFolders/inbox/messages",
+          "query": {
+            "$filter": "isRead eq false",
+            "$top": 1
+          }
+        },
+        "metadata": {
+          "operationMetadataId": "h4e3c2f4-5b8e-4c1b-8c3b-5e5c7c8e3f1f"
+        },
+        "type": "ApiConnection"
+      }
+    },
+    "parameters": {
+      "$connections": {
+        "value": {
+          "office365": {
+            "connectionId": "<your-office365-connection-id>",
+            "connectionName": "office365",
+            "id": "/providers/Microsoft.PowerApps/apis/shared_office365"
+          },
+          "azureblob": {
+            "connectionId": "<your-adls-connection-id>",
+            "connectionName": "azureblob",
+            "id": "/providers/Microsoft.PowerApps/apis/shared_azureblob"
+          }
+        }
+      }
+    }
+  }
+}
