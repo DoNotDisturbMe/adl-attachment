@@ -49,4 +49,5 @@ jobs:
         run: |
           az deployment group create \
             --resource-group ADL_Data \
-            --template-file workflows/email-trigger-workflow.json
+            --template-file [email-trigger-workflow.json](http://_vscodecontentref_/2) \
+            --verbose
