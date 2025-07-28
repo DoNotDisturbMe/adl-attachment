@@ -32,7 +32,7 @@ jobs:
             --tenant "${{ secrets.AZURE_TENANT_ID }}"
           az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      - name: Deploy Logic App via ARM template
+      - name: Deploy Logic App ARM Template
         run: |
           az deployment group create \
             --resource-group ADL_Data \
