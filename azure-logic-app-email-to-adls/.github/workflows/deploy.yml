@@ -32,9 +32,6 @@ jobs:
             --tenant "${{ secrets.AZURE_TENANT_ID }}"
           az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
 
-      - name: Install Logic extension (optional if you want to run logic commands)
-        run: az extension add --name logic
-
       - name: Deploy Logic App via ARM template
         run: |
           az deployment group create \
