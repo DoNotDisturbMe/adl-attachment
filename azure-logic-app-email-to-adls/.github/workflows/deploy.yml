@@ -24,21 +24,20 @@ jobs:
       - name: Build TypeScript
         run: npm run build
 
-      - name: Azure Login
-        uses: azure/login@v1
-        with:
-          creds: |
-            {
-              "clientId": "${{ secrets.AZURE_CLIENT_ID }}",
-              "clientSecret": "${{ secrets.AZURE_CLIENT_SECRET }}",
-              "subscriptionId": "${{ secrets.AZURE_SUBSCRIPTION_ID }}",
-              "tenantId": "${{ secrets.AZURE_TENANT_ID }}"
-            }
-
-      - name: Deploy Logic App via ARM Template
+      - name: Azure CLI Login
         run: |
-          az deployment group create \
-            --name logicapp-deploy-${{ github.run_number }} \
+          az login --service-principal \
+            -u "${{ secrets.AZURE_CLIENT_ID }}" \
+            -p "${{ secrets.AZURE_CLIENT_SECRET }}" \
+            --tenant "${{ secrets.AZURE_TENANT_ID }}"
+          az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      - name: Install Logic App extension
+        run: az extension add --name logic
+
+      - name: Deploy Logic App
+        run: |
+          az logicapp deployment create \
             --resource-group ADL_Data \
-            --template-file workflows/email-trigger-workflow.json \
-            --parameters logicAppName=emailsendlogicapp
+            --name emailsendlogicapp \
+            --template-file workflows/email-trigger-workflow.json
