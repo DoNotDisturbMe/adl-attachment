@@ -1,0 +1,40 @@
+name: Deploy Logic App
+
+on:
+  push:
+    branches:
+      - master
+
+jobs:
+  build-and-deploy:
+    runs-on: self-hosted
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build TypeScript
+        run: npm run build
+
+      - name: Login to Azure
+        run: |
+          az login --service-principal \
+            -u "${{ secrets.AZURE_CLIENT_ID }}" \
+            -p "${{ secrets.AZURE_CLIENT_SECRET }}" \
+            --tenant "${{ secrets.AZURE_TENANT_ID }}"
+          az account set --subscription "${{ secrets.AZURE_SUBSCRIPTION_ID }}"
+
+      - name: Deploy Logic App
+        run: |
+          az logicapp deployment create \
+            --resource-group ADL_Data \
+            --name emailsendlogicapp \
+            --template-file workflows/email-trigger-workflow.json
