@@ -37,7 +37,7 @@ jobs:
 
       - name: Deploy Logic App
         run: |
-          az logicapp deployment create \
+          az logic deployment create \
             --resource-group ADL_Data \
             --name emailsendlogicapp \
             --template-file workflows/email-trigger-workflow.json
